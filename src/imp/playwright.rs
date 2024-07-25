@@ -1,7 +1,19 @@
 use crate::{
     api::{browser::ContextBuilder, browser_type::PersistentContextLauncher},
     imp::{browser_type::BrowserType, core::*, prelude::*, selectors::Selectors, utils::Viewport},
-    protocol::generated::{playwright as protocol, root::commands::InitializeArgsSdkLanguage}
+    protocol::{
+        self,
+        generated::{
+            local_utils::{
+                InitializerDeviceDescriptorsDescriptorViewport,
+                InitializerDeviceDescriptorsDescriptorScreen,
+                InitializerDeviceDescriptorsDescriptorDefaultBrowserType,
+                InitializerDeviceDescriptorsDescriptor,
+                InitializerDeviceDescriptors,
+            },
+            root::commands::InitializeArgsSdkLanguage,
+        },
+    },
 };
 
 #[derive(Debug)]
@@ -17,18 +29,9 @@ pub(crate) struct Playwright {
 impl Playwright {
     pub(crate) fn try_new(ctx: &Context, channel: ChannelOwner) -> Result<Self, Error> {
         // TODO
-        let protocol::Initializer {
-            android: _,
-            chromium,
-            device_descriptors,
-            electron: _,
-            firefox,
-            pre_connected_android_device: _,
-            pre_launched_browser: _,
-            selectors,
-            socks_support: _,
-            utils: _,
-            webkit
+        let protocol::generated::android_device::Initializer {
+            model: _,
+            serial: _,
         } = serde_json::from_value(channel.initializer.clone())?;
         let chromium = get_object!(ctx, &chromium.guid, BrowserType)?;
         let firefox = get_object!(ctx, &firefox.guid, BrowserType)?;
@@ -102,16 +105,16 @@ pub struct DeviceDescriptor {
     pub device_scale_factor: f64,
     pub is_mobile: bool,
     pub has_touch: bool,
-    pub default_browser_type: protocol::InitializerDeviceDescriptorsDescriptorDefaultBrowserType
+    pub default_browser_type: InitializerDeviceDescriptorsDescriptorDefaultBrowserType
 }
 
-impl TryFrom<protocol::InitializerDeviceDescriptors> for DeviceDescriptor {
+impl TryFrom<InitializerDeviceDescriptors> for DeviceDescriptor {
     type Error = ();
-    fn try_from(x: protocol::InitializerDeviceDescriptors) -> Result<Self, Self::Error> {
-        let protocol::InitializerDeviceDescriptors {
+    fn try_from(x: InitializerDeviceDescriptors) -> Result<Self, Self::Error> {
+        let InitializerDeviceDescriptors {
             name,
             descriptor:
-                protocol::InitializerDeviceDescriptorsDescriptor {
+                InitializerDeviceDescriptorsDescriptor {
                     default_browser_type,
                     device_scale_factor,
                     has_touch,
@@ -138,24 +141,24 @@ impl TryFrom<protocol::InitializerDeviceDescriptors> for DeviceDescriptor {
     }
 }
 
-impl TryFrom<protocol::InitializerDeviceDescriptorsDescriptorScreen> for Viewport {
+impl TryFrom<InitializerDeviceDescriptorsDescriptorScreen> for Viewport {
     type Error = ();
     fn try_from(
-        x: protocol::InitializerDeviceDescriptorsDescriptorScreen
+        x: InitializerDeviceDescriptorsDescriptorScreen
     ) -> Result<Self, Self::Error> {
-        let protocol::InitializerDeviceDescriptorsDescriptorScreen { height, width } = x;
+        let InitializerDeviceDescriptorsDescriptorScreen { height, width } = x;
         let width: i32 = width.as_i64().ok_or(())?.try_into().map_err(|_| ())?;
         let height: i32 = height.as_i64().ok_or(())?.try_into().map_err(|_| ())?;
         Ok(Self { width, height })
     }
 }
 
-impl TryFrom<protocol::InitializerDeviceDescriptorsDescriptorViewport> for Viewport {
+impl TryFrom<InitializerDeviceDescriptorsDescriptorViewport> for Viewport {
     type Error = ();
     fn try_from(
-        x: protocol::InitializerDeviceDescriptorsDescriptorViewport
+        x: InitializerDeviceDescriptorsDescriptorViewport
     ) -> Result<Self, Self::Error> {
-        let protocol::InitializerDeviceDescriptorsDescriptorViewport { height, width } = x;
+        let InitializerDeviceDescriptorsDescriptorViewport { height, width } = x;
         let width: i32 = width.as_i64().ok_or(())?.try_into().map_err(|_| ())?;
         let height: i32 = height.as_i64().ok_or(())?.try_into().map_err(|_| ())?;
         Ok(Self { width, height })
